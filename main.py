@@ -3,7 +3,8 @@
 YouTube Channel Video Lister
 
 Usage:
-    python main.py "<channel name or URL>"
+    python main.py                          # launch browser UI
+    python main.py "<channel name or URL>"  # CLI mode
     python main.py "<channel name or URL>" --year 2023
     python main.py "@mkbhd"
     python main.py "https://www.youtube.com/@mkbhd" --year 2024
@@ -26,7 +27,9 @@ def main():
     )
     parser.add_argument(
         "channel",
-        help="Channel name, @handle, or full YouTube channel URL",
+        nargs="?",
+        default=None,
+        help="Channel name, @handle, or full YouTube channel URL (omit to open browser UI)",
     )
     parser.add_argument(
         "--year",
@@ -40,6 +43,11 @@ def main():
         help="Print a compact table of video counts per month instead of full list",
     )
     args = parser.parse_args()
+
+    if args.channel is None:
+        from web_app import start
+        start()
+        return
 
     api_key = os.getenv("YOUTUBE_API_KEY")
     if not api_key:
