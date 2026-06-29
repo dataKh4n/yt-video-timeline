@@ -2,608 +2,1610 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Channel Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>GetGrowline — YouTube Channel Analytics</title>
+  <meta name="description" content="Know your line. Grow your line. Track any YouTube channel's growth, audience and performance over time." />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="GetGrowline" />
+  <link rel="manifest" href="/static/manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png" />
+  <link rel="apple-touch-icon" href="/static/icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='1' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%232f6df6'/%3E%3Cstop offset='.5' stop-color='%237c3aed'/%3E%3Cstop offset='1' stop-color='%23ff0033'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='1' y='1' width='34' height='34' rx='9' fill='url(%23g)'/%3E%3Cpolyline points='7,24 14,18 20,21 29,10' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpolyline points='23,10 29,10 29,16' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+
+  <!-- Libraries (charts + export) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --red: #ff0000;
-      --red-dark: #cc0000;
-      --bg: #0f0f0f;
-      --surface: #1a1a1a;
-      --surface2: #242424;
-      --surface3: #2e2e2e;
-      --border: #2e2e2e;
-      --text: #f1f1f1;
-      --text-muted: #999;
-      --link: #3ea6ff;
-      --sidebar-w: 300px;
-      --green: #2ecc71;
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --surface2: #f0f3f7;
+      --border: #e3e7ed;
+      --text: #1f2733;
+      --muted: #6b7685;
+      --accent: #ff0033;
+      --accent-dark: #d4002b;
+      --blue: #2f6df6;
+      --blue-soft: rgba(47,109,246,.12);
+      --green: #14a44d;
+      --amber: #f59e0b;
+      --purple: #7c3aed;
+      --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+      --radius: 10px;
+      --sidebar-w: 270px;
+      --brand-line: linear-gradient(90deg, #2f6df6 0%, #7c3aed 50%, #ff0033 100%);
     }
 
-    html, body { height: 100%; font-family: "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+    html, body { height: 100%; }
+    body {
+      font-family: "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
 
-    /* ─── Layout ─────────────────────────────────────────── */
-    .app { display: flex; height: 100vh; overflow: hidden; }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    button { font-family: inherit; }
 
-    /* ─── Sidebar ─────────────────────────────────────────── */
-    .sidebar {
-      width: var(--sidebar-w);
-      min-width: var(--sidebar-w);
+    /* ── Top app bar ─────────────────────────────────────── */
+    .appbar {
+      height: 64px;
       background: var(--surface);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .sidebar-header {
-      padding: 18px 16px 14px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 18px;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
     }
-    .sidebar-header h2 { font-size: 15px; font-weight: 600; }
-    .history-list { overflow-y: auto; flex: 1; padding: 8px 0; }
-    .history-empty { color: var(--text-muted); font-size: 13px; text-align: center; padding: 32px 16px; }
+    .brand { display: flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }
+    .brand .logo { width: 30px; height: 30px; flex-shrink: 0; }
+    .brand-text { display: flex; flex-direction: column; line-height: 1.05; border: none; border-radius: 11px; padding: 6px 13px 5px; background: linear-gradient(120deg, #2f6df6 0%, #7c3aed 55%, #ff0033 100%); box-shadow: 0 4px 14px rgba(124,58,237,.32); }
+    .brand-name { font-family: 'Manrope', -apple-system, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -1px; position: relative; display: inline-block; padding: 0 9px 8px 0; color: #fff; }
+    .brand-name b { color: var(--accent); }
+    .stockmark { position: absolute; left: 0; bottom: -2px; width: 100%; height: 11px; overflow: visible; pointer-events: none; }
+    .stockmark .spark { fill: none; stroke: rgba(255,255,255,.9); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 7 6; animation: sparkFlow 1.5s linear infinite; }
+    .stockmark .arrow { fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    @keyframes sparkFlow { to { stroke-dashoffset: -26; } }
+    .brand-tag { font-size: 10.5px; color: var(--muted); font-weight: 700; letter-spacing: .2px; margin-top: 3px; }
+    .state-logo { font-size: 18px; padding: 6px 13px 5px; border-radius: 11px; color: #fff; background: linear-gradient(120deg, #2f6df6 0%, #7c3aed 55%, #ff0033 100%); box-shadow: none; margin-bottom: 16px; opacity: .35; transform: scale(.9); }
+
+    .nav-tabs { display: flex; gap: 2px; background: var(--surface2); border-radius: 8px; padding: 3px; }
+    .nav-tab {
+      border: none; background: transparent; color: var(--muted);
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .12s;
+    }
+    .nav-tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+    /* Toggle moves into the content (below the cumulative-views chart) */
+    .nav-tabs.inline { display: inline-flex; margin: 14px 0 16px; }
+
+    .appbar-spacer { flex: 1; }
+
+    .pro-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, #7c3aed, #2f6df6);
+      color: #fff; border: none; border-radius: 999px;
+      padding: 7px 14px; font-size: 13px; font-weight: 700; cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .pro-btn:hover { filter: brightness(1.06); }
+
+    /* ── Page shell ──────────────────────────────────────── */
+    .shell { display: flex; min-height: calc(100vh - 64px); }
+
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+    }
+    .sidebar h3 {
+      font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+      color: var(--muted); padding: 16px 18px 8px;
+    }
+    .history-list { overflow-y: auto; flex: 1; padding-bottom: 12px; }
+    .history-empty { color: var(--muted); font-size: 13px; padding: 8px 18px; }
     .history-item {
-      padding: 10px 14px;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: background .15s, border-color .15s;
+      padding: 10px 18px; cursor: pointer; border-left: 3px solid transparent;
     }
     .history-item:hover { background: var(--surface2); }
-    .history-item.active { background: var(--surface2); border-left-color: var(--red); }
-    .hi-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .hi-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; display: flex; gap: 8px; align-items: center; }
-    .badge {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1px 7px;
-      font-size: 11px;
+    .history-item.active { background: var(--blue-soft); border-left-color: var(--blue); }
+    .hi-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hi-meta { font-size: 11px; color: var(--muted); margin-top: 2px; display: flex; gap: 8px; }
+    .hi-meta .badge { background: var(--surface2); border-radius: 9px; padding: 0 7px; }
+
+    /* ── Left menu ───────────────────────────────────────── */
+    .menu-nav { display: flex; flex-direction: column; padding: 14px 12px; gap: 2px; flex: 1; overflow-y: auto; }
+    .mn-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+      border: none; background: transparent; cursor: pointer; padding: 10px 12px; border-radius: 10px;
+      font-family: 'Manrope', -apple-system, sans-serif; font-size: 13.5px; font-weight: 600; color: var(--text);
+      transition: background .15s, color .15s; }
+    .mn-item:hover { background: var(--surface2); }
+    .mn-item.active { background: var(--blue-soft); color: var(--blue); }
+    .mn-item .ic { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+    .mn-item .del { opacity: 0; font-size: 16px; line-height: 1; color: var(--muted); padding: 0 4px; border-radius: 6px; }
+    .mn-item:hover .del { opacity: 1; }
+    .mn-item .del:hover { background: var(--surface); color: var(--accent); }
+    .mn-section { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .7px; color: var(--muted); padding: 8px 12px 4px; margin-top: 14px; }
+    .mn-empty { color: var(--muted); font-size: 12.5px; padding: 4px 12px 8px; }
+    .mini { width: 22px; height: 22px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface);
+      color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
+    .mini:hover { background: var(--surface2); color: var(--blue); border-color: var(--blue); }
+    .btn-zoom { height: 28px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px; transition: all .12s; }
+    .btn-zoom:hover { background: var(--surface2); color: var(--blue); border-color: var(--blue); }
+
+    .main { flex: 1; min-width: 0; padding: 22px 26px 60px; }
+
+    /* ── Search hero / bar ───────────────────────────────── */
+    .searchbar {
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px; box-shadow: var(--shadow);
+      margin-bottom: 20px;
     }
-    .history-item.active .badge { border-color: #444; }
-
-    /* ─── Main ──────────────────────────────────────────────── */
-    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-    /* ─── Top bar ──────────────────────────────────────────── */
-    .topbar {
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .searchbar input[type=text] {
+      flex: 1; min-width: 240px; border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 14px; font-size: 14px; outline: none; background: var(--surface);
     }
-    .logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .logo span { font-size: 17px; font-weight: 700; letter-spacing: -.3px; }
-    .logo .yt-dot { color: var(--red); }
-
-    .search-bar { display: flex; flex: 1; gap: 8px; align-items: center; }
-
-    .search-bar input[type="text"] {
-      flex: 1;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 14px;
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border-color .15s;
+    .searchbar input[type=number] {
+      width: 120px; border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; font-size: 14px; outline: none;
     }
-    .search-bar input[type="text"]:focus { border-color: #555; }
-    .search-bar input[type="text"]::placeholder { color: var(--text-muted); }
-
-    .search-bar input[type="number"] {
-      width: 104px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border-color .15s;
-      appearance: textfield;
+    .searchbar input:focus { border-color: var(--blue); }
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      padding: 10px 22px; font-size: 14px; font-weight: 700; cursor: pointer;
     }
-    .search-bar input[type="number"]:focus { border-color: #555; }
-    .search-bar input[type="number"]::placeholder { color: var(--text-muted); }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
 
-    /* View selector */
-    .view-select {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 8px 10px;
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: border-color .15s;
-    }
-    .view-select:focus { border-color: #555; }
+    /* ── Search block: hint + progress line ──────────────── */
+    .search-block { margin-bottom: 20px; }
+    .hero-pills { display: flex; flex-wrap: wrap; gap: 7px; margin: 2px 2px 10px; }
+    .hero-pills span { font-size: 11.5px; font-weight: 700; letter-spacing: .2px; padding: 4px 11px; border-radius: 999px;
+      background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    .hero-pills span.lead { background: linear-gradient(90deg, rgba(47,109,246,.12), rgba(124,58,237,.12)); color: var(--blue); border-color: transparent; }
+    .hero-title { font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 40px; font-weight: 800;
+      letter-spacing: -1.4px; margin: 6px 2px 8px; color: var(--text); line-height: 1.1; }
+    .hero-title span { background: var(--brand-line); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .title-line { width: 84px; height: 16px; overflow: visible; vertical-align: middle; }
+    .title-line polyline { animation: titleFlow 1.5s linear infinite; }
+    @keyframes titleFlow { to { stroke-dashoffset: -26; } }
+    .hero-sub { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 700; color: var(--blue); letter-spacing: .2px; margin: 0 2px 10px; }
+    @media (max-width: 860px) { .hero-title { font-size: 30px; letter-spacing: -1px; } .title-line { width: 54px; } }
+    .search-hint { font-size: 13px; color: var(--muted); font-weight: 600; margin: 0 2px 12px; }
+    .search-block .searchbar { margin-bottom: 0; }
+    .progress-line { height: 14px; margin-top: 14px; opacity: .95;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='14'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%232f6df6'/%3E%3Cstop offset='.5' stop-color='%237c3aed'/%3E%3Cstop offset='1' stop-color='%23ff0033'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolyline points='0,9 20,4 40,9 60,3 80,8 100,3 120,9' fill='none' stroke='url(%23g)' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' stroke-dasharray='7 6'/%3E%3C/svg%3E") repeat-x left center / 120px 14px;
+      animation: stockScroll 1.5s linear infinite; }
+    @keyframes stockScroll { from { background-position-x: 0; } to { background-position-x: 120px; } }
+    .progress-line.loading { animation-duration: 0.7s; opacity: 1; }
 
-    .btn-search {
-      background: var(--red);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 20px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .15s;
-      white-space: nowrap;
-    }
-    .btn-search:hover { background: var(--red-dark); }
-    .btn-search:disabled { opacity: .5; cursor: not-allowed; }
+    .site-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
+      margin-top: 40px; padding: 18px 2px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--muted); }
+    .site-foot b { color: var(--text); }
+    .foot-right { display: flex; align-items: center; gap: 8px; }
+    .foot-link { border: 1px solid var(--border); background: var(--surface); border-radius: 8px; padding: 6px 12px;
+      font-size: 12.5px; font-weight: 700; color: var(--blue); cursor: pointer; }
+    .foot-link:hover { background: var(--blue-soft); border-color: var(--blue); }
+    .foot-sep, .foot-muted { color: var(--muted); }
+    .fb-row { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .fb-row label { font-size: 12px; font-weight: 700; color: var(--muted); }
+    #feedback-form textarea.control { resize: vertical; font-family: inherit; padding: 9px 11px; }
+    .vbtn { border: 1px solid var(--border); background: var(--surface); border-radius: 7px; padding: 5px 10px;
+      font-size: 12px; font-weight: 600; color: var(--blue); cursor: pointer; white-space: nowrap; }
+    .vbtn:hover { background: var(--blue-soft); }
 
-    /* ─── Content area ─────────────────────────────────────── */
-    .content { flex: 1; overflow-y: auto; padding: 24px; }
-
-    /* ─── States ────────────────────────────────────────────── */
-    .state-idle, .state-loading, .state-error, .state-empty {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 300px;
-      gap: 12px;
-      color: var(--text-muted);
-      text-align: center;
-    }
-    .state-idle svg { opacity: .25; }
-    .state-idle p, .state-empty p { font-size: 15px; }
-    .state-empty { color: var(--text-muted); }
-    .state-empty svg { opacity: .3; }
-    .state-empty .empty-hint { font-size: 12px; margin-top: -4px; }
-
-    .spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--red);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
+    /* ── States ──────────────────────────────────────────── */
+    .state { display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 340px; gap: 12px; color: var(--muted); text-align: center; }
+    .state svg { opacity: .35; }
+    .spinner { width: 38px; height: 38px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    .state-error { color: var(--accent); }
 
-    .state-error { color: #ff6b6b; }
-    .state-error .err-msg { font-size: 14px; max-width: 420px; }
+    /* ── Report header (GA style) ────────────────────────── */
+    .report-head { margin-bottom: 14px; }
+    .breadcrumb { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .report-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .report-title h1 { font-size: 22px; font-weight: 800; letter-spacing: -.5px; }
+    .report-title .range { font-size: 13px; color: var(--muted); }
 
-    /* ─── Results header ─────────────────────────────────────── */
-    .results-header { margin-bottom: 20px; }
-    .results-header h1 { font-size: 20px; font-weight: 700; }
-    .rh-meta {
-      margin-top: 6px;
-      color: var(--text-muted);
-      font-size: 13px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      flex-wrap: wrap;
+    .toolbar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 10px 0 14px; border-bottom: 1px solid var(--border); margin-bottom: 18px;
     }
-    .rh-meta a { color: var(--link); text-decoration: none; }
-    .rh-meta a:hover { text-decoration: underline; }
+    .toolbar .spacer { flex: 1; }
 
-    /* ─── List view ──────────────────────────────────────────── */
-    .month-group { margin-bottom: 28px; }
-    .month-heading {
-      font-size: 15px;
-      font-weight: 600;
-      padding: 8px 0 10px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
+    .menu { position: relative; }
+    .menu-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer;
     }
-    .month-count { font-size: 12px; font-weight: 400; color: var(--text-muted); }
-    .video-list { display: flex; flex-direction: column; gap: 4px; }
-    .video-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 6px;
-      transition: background .12s;
+    .menu-btn:hover { background: var(--surface2); }
+    .menu-btn .chev { width: 9px; height: 9px; border-right: 2px solid var(--muted);
+      border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin-top: -3px; }
+    .menu-pop {
+      position: absolute; top: calc(100% + 6px); right: 0; min-width: 200px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(16,24,40,.14); padding: 6px; display: none; z-index: 40;
     }
-    .video-item:hover { background: var(--surface2); }
-    .video-num { font-size: 11px; color: var(--text-muted); min-width: 22px; padding-top: 2px; text-align: right; }
-    .video-info { flex: 1; }
-    .video-title { font-size: 13px; font-weight: 500; line-height: 1.4; }
-    .video-link { font-size: 12px; color: var(--link); text-decoration: none; display: inline-block; margin-top: 2px; }
-    .video-link:hover { text-decoration: underline; }
-    .video-date { font-size: 11px; color: var(--text-muted); white-space: nowrap; padding-top: 3px; }
+    .menu-pop.open { display: block; }
+    .menu-pop button {
+      display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+      background: transparent; border: none; padding: 9px 10px; border-radius: 7px;
+      font-size: 13px; color: var(--text); cursor: pointer;
+    }
+    .menu-pop button:hover { background: var(--surface2); }
+    .menu-pop .ic { width: 16px; height: 16px; flex-shrink: 0; display: inline-flex; }
+    .menu-sep { height: 1px; background: var(--border); margin: 6px 4px; }
+    .menu-label { font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+      color: var(--muted); padding: 6px 10px 2px; }
 
-    /* ─── Summary table ──────────────────────────────────────── */
-    .summary-wrap { overflow-x: auto; }
+    /* dropdown selects */
+    .field { display: inline-flex; flex-direction: column; gap: 3px; }
+    .field label { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+    select.control {
+      appearance: none;
+      background: var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%236b7685'/></svg>") no-repeat right 10px center;
+      border: 1px solid var(--border); border-radius: 8px; padding: 8px 30px 8px 12px;
+      font-size: 13px; font-weight: 600; color: var(--text); cursor: pointer; min-width: 130px;
+    }
+    select.control:focus { outline: none; border-color: var(--blue); }
 
-    .summary-table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 700px;
-      font-size: 13px;
-    }
-    .summary-table th, .summary-table td {
-      padding: 9px 12px;
-      text-align: right;
-      border: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    .summary-table th {
-      background: var(--surface2);
-      font-weight: 600;
-      color: var(--text-muted);
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .4px;
-    }
-    .summary-table th:first-child, .summary-table td:first-child {
-      text-align: left;
-      font-weight: 600;
-    }
-    .summary-table tbody tr:hover td { background: var(--surface2); }
-    .summary-table tbody tr td { color: var(--text); }
+    /* ── Summary line + stat cards ───────────────────────── */
+    .summary-line { font-size: 20px; font-weight: 700; margin: 4px 0 18px; }
+    .summary-line .hl { color: var(--accent); }
 
-    /* highlight non-zero cells */
-    .summary-table td.has-videos { color: #fff; font-weight: 500; }
-    .summary-table td.top-month { background: rgba(255,0,0,.12); color: var(--red) !important; font-weight: 700; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px 16px; box-shadow: var(--shadow); cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .1s; }
+    .card:hover { border-color: var(--blue); box-shadow: 0 4px 14px rgba(47,109,246,.14); }
+    .card:active { transform: translateY(1px); }
+    .card.active { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(47,109,246,.18); }
+    .card .k { font-size: 12px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .card .v { font-size: 19px; font-weight: 800; margin-top: 4px; letter-spacing: -.6px; white-space: nowrap; }
+    .card .dot { width: 8px; height: 8px; border-radius: 50%; }
 
-    /* totals row */
-    .summary-table tfoot td {
-      background: var(--surface2);
-      font-weight: 700;
-      border-top: 2px solid var(--border);
-      color: var(--text);
-    }
-    .summary-table .total-col {
-      background: var(--surface3) !important;
-      font-weight: 700;
-      border-left: 2px solid var(--border);
-    }
-    .summary-table tfoot .total-col { color: var(--red); }
+    /* ── Video analytics modal ───────────────────────────── */
+    .vm-head { display: flex; align-items: flex-start; gap: 12px; }
+    .vm-head h2 { font-size: 17px; font-weight: 800; line-height: 1.25; flex: 1; }
+    .vm-close { border: none; background: var(--surface2); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--muted); flex-shrink: 0; }
+    .vm-sub { font-size: 12.5px; color: var(--muted); margin: 6px 0 14px; }
+    .vm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .vm-stat { background: var(--surface2); border-radius: 10px; padding: 10px 12px; }
+    .vm-k { font-size: 11px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    .vm-k .dot { width: 7px; height: 7px; border-radius: 50%; }
+    .vm-v { font-size: 18px; font-weight: 800; margin-top: 3px; letter-spacing: -.4px; }
+    .vm-chart-head { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .vm-note { font-size: 11px; color: var(--muted); margin-top: 12px; }
+    .zoom-hint { font-size: 11px; color: var(--muted); font-weight: 600; }
+    @media (max-width: 860px) { .zoom-hint { display: none; } }
 
-    /* scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #444; }
+    /* ── Panels ──────────────────────────────────────────── */
+    .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); margin-bottom: 20px; }
+    .panel-head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .panel-head h2 { font-size: 15px; font-weight: 700; }
+    .panel-head .spacer { flex: 1; }
+    .panel-body { padding: 18px; }
+    .chart-wrap { position: relative; height: 340px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 1080px){ .grid-2 { grid-template-columns: 1fr; } }
+
+    /* ── Ranked tables (GA style) ────────────────────────── */
+    table.rank { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.rank th, table.rank td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    table.rank th { font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+    table.rank td.num, table.rank th.num { text-align: right; white-space: nowrap; }
+    table.rank tr:hover, table.rank tbody tr:hover { background: var(--surface2); }
+    .bar-cell { position: relative; }
+    .bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--blue-soft); border-radius: 0 6px 6px 0; }
+    .bar-cell span { position: relative; }
+    .pager { display: flex; align-items: center; gap: 8px; padding: 10px 14px; color: var(--muted); font-size: 12px; }
+    .pager .spacer { flex: 1; }
+    .pager button { border: 1px solid var(--border); background: var(--surface); border-radius: 6px;
+      width: 28px; height: 28px; cursor: pointer; color: var(--text); }
+    .pager button:disabled { opacity: .4; cursor: not-allowed; }
+
+    /* ── AI / Pro panel ──────────────────────────────────── */
+    .ai-panel { position: relative; overflow: hidden; }
+    .ai-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 14px; }
+    .ai-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px; background: var(--surface2); }
+    .ai-card .t { font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+    .ai-card .d { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .locked .ai-grid { filter: blur(5px); pointer-events: none; user-select: none; }
+    .ai-lock {
+      position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 12px; background: rgba(255,255,255,.55); backdrop-filter: blur(2px);
+    }
+    .ai-lock .badge-pro { background: linear-gradient(135deg,#7c3aed,#2f6df6); color: #fff;
+      border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; }
+
+    .pill { background: var(--surface2); border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 600; color: var(--muted); }
+    .sample-tag { background: #fff7ed; color: var(--amber); border: 1px solid #fed7aa; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 700; }
+
+    /* ── Modal ───────────────────────────────────────────── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(16,24,40,.5); display: none;
+      align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border-radius: 16px; max-width: 460px; width: 100%;
+      box-shadow: 0 20px 60px rgba(16,24,40,.3); overflow: hidden; }
+    .modal-hero { background: linear-gradient(135deg,#7c3aed,#2f6df6); color: #fff; padding: 26px 24px; }
+    .modal-hero h2 { font-size: 22px; font-weight: 800; }
+    .modal-hero p { opacity: .9; margin-top: 4px; }
+    .modal-body { padding: 22px 24px; }
+    .feat { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; font-size: 14px; }
+    .feat .ck { color: var(--green); flex-shrink: 0; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-upgrade { flex: 1; background: linear-gradient(135deg,#7c3aed,#2f6df6); color: #fff; border: none;
+      border-radius: 10px; padding: 12px; font-weight: 700; font-size: 15px; cursor: pointer; }
+    .btn-ghost { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 16px; font-weight: 600; cursor: pointer; color: var(--text); }
+    .price-row { text-align: center; margin-top: 12px; color: var(--muted); font-size: 13px; }
+
+    /* ── List view ───────────────────────────────────────── */
+    .month-group { margin-bottom: 20px; }
+    .month-heading { font-size: 14px; font-weight: 700; padding: 8px 0; border-bottom: 1px solid var(--border);
+      margin-bottom: 8px; display: flex; gap: 8px; align-items: baseline; }
+    .month-count { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .vrow { display: flex; gap: 12px; align-items: flex-start; padding: 8px 10px; border-radius: 8px; }
+    .vrow:hover { background: var(--surface2); }
+    .vrow .n { font-size: 12px; color: var(--muted); min-width: 24px; text-align: right; }
+    .vrow .info { flex: 1; min-width: 0; }
+    .vrow .vt { font-size: 13px; font-weight: 600; }
+    .vrow .vm { font-size: 12px; color: var(--muted); display: flex; gap: 12px; flex-wrap: wrap; margin-top: 2px; }
+
+    .hidden { display: none !important; }
+
+    /* ── Hamburger + drawer ──────────────────────── */
+    .hamburger { display: none; border: none; background: transparent; cursor: pointer; padding: 6px; border-radius: 8px; color: var(--text); }
+    .hamburger:hover { background: var(--surface2); }
+    .scrim { display: none; position: fixed; inset: 0; background: rgba(16,24,40,.4); z-index: 45; }
+
+    @media (max-width: 860px){
+      .hamburger { display: inline-flex; }
+      .sidebar {
+        position: fixed; top: 64px; bottom: 0; left: 0; z-index: 46;
+        transform: translateX(-100%); transition: transform .25s ease;
+        box-shadow: 0 10px 30px rgba(0,0,0,.2);
+      }
+      body.sidebar-open .sidebar { transform: translateX(0); }
+      body.sidebar-open .scrim { display: block; }
+      .main { padding: 16px; }
+    }
   </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- ── Sidebar ──────────────────────────────────────────── -->
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>
-      <h2>Session History</h2>
-    </div>
-    <div class="history-list" id="history-list">
-      <p class="history-empty">No searches yet</p>
-    </div>
-  </aside>
-
-  <!-- ── Main ─────────────────────────────────────────────── -->
-  <div class="main">
-    <div class="topbar">
-      <div class="logo">
-        <svg width="28" height="20" viewBox="0 0 28 20" fill="none">
-          <rect width="28" height="20" rx="4" fill="#FF0000"/>
-          <polygon points="11,5 11,15 20,10" fill="white"/>
-        </svg>
-        <span>Channel<span class="yt-dot">.</span>Explorer</span>
+  <!-- ── Top app bar ─────────────────────────────────────── -->
+  <header class="appbar">
+    <button class="hamburger" id="menu-toggle" aria-label="Menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="brand" onclick="location.reload()">
+      <div class="brand-text">
+        <span class="brand-name">GetGrowline<svg class="stockmark" viewBox="0 0 44 12" aria-hidden="true"><defs><linearGradient id="sparkGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2f6df6"/><stop offset=".5" stop-color="#7c3aed"/><stop offset="1" stop-color="#ff0033"/></linearGradient></defs><polyline class="spark" points="0,8 10,6 20,8 30,5 44,0"/><polyline class="arrow" points="36,-1 44,0 39,6"/></svg></span>
       </div>
-      <form class="search-bar" id="search-form" autocomplete="off">
-        <input type="text" id="channel-input" placeholder="@handle, channel name, or YouTube URL" />
-        <input type="number" id="year-input" placeholder="Year (opt.)" min="2005" max="2030" />
-        <select class="view-select" id="view-select">
-          <option value="list">List view</option>
-          <option value="summary">Summary table</option>
-        </select>
-        <button class="btn-search" type="submit" id="search-btn">Search</button>
-      </form>
     </div>
 
-    <div class="content" id="content">
-      <div class="state-idle">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <p>Enter a YouTube channel to see its video timeline</p>
+    <div class="nav-tabs" id="nav-tabs" style="display:none">
+      <button class="nav-tab active" data-view="dashboard">Dashboard</button>
+      <button class="nav-tab" data-view="list">List</button>
+      <button class="nav-tab" data-view="table">Table</button>
+    </div>
+
+    <div class="appbar-spacer"></div>
+
+    <button class="pro-btn" id="open-pro" style="display:none">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3L22 9l-5 4.6L18.2 21 12 17.3 5.8 21 7 13.6 2 9l7.1-.7L12 2z"/></svg>
+      Growline AI · $1
+    </button>
+  </header>
+
+  <div class="shell">
+    <!-- ── Left menu ────────────────────────────────────── -->
+    <div class="scrim" id="scrim"></div>
+    <aside class="sidebar">
+      <nav class="menu-nav">
+        <button class="mn-item active" data-nav="dashboard"><span class="ic">▦</span> Dashboard</button>
+        <div class="mn-section">Quick views</div>
+        <button class="mn-item" data-quick="age"><span class="ic">👥</span> By age</button>
+        <button class="mn-item" data-quick="gender"><span class="ic">⚖️</span> By gender</button>
+        <button class="mn-item" data-quick="country"><span class="ic">🌍</span> By country</button>
+        <button class="mn-item" data-quick="time"><span class="ic">🕒</span> By time of day</button>
+        <div class="mn-section">My dashboards<div class="spacer"></div><button class="mini" id="save-dash" title="Save current view">+</button></div>
+        <div id="saved-dash"><p class="mn-empty">No saved dashboards</p></div>
+        <div class="mn-section">History</div>
+        <div class="history-list" id="history-list">
+          <p class="history-empty">No searches yet</p>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- ── Main ─────────────────────────────────────────── -->
+    <main class="main">
+      <div class="search-block">
+        <div class="hero-pills"><span class="lead">✨ Built for</span><span>YouTubers</span><span>Professionals</span><span>Newbies</span><span>Agencies</span></div>
+        <h1 class="hero-title">Know your line <svg class="title-line" viewBox="0 0 44 12" aria-hidden="true"><polyline points="0,8 10,6 20,8 30,5 44,0" fill="none" stroke="url(#sparkGrad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6"/><polyline points="36,-1 44,0 39,6" fill="none" stroke="url(#sparkGrad)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>Grow your line</span></h1>
+        <div class="hero-sub">Know your audience. Grow your channel.</div>
+        <div class="search-hint">Enter a YouTube channel name or a video link</div>
+        <form class="searchbar" id="search-form" autocomplete="off">
+          <input type="text" id="channel-input" placeholder="@handle, channel name, or a youtube.com/watch?v=… link" />
+          <input type="number" id="year-input" placeholder="Year (opt.)" min="2005" max="2035" />
+          <button class="btn-primary" id="search-btn" type="submit">Analyze Channel</button>
+        </form>
+        <div class="progress-line done" id="progress-line"></div>
+      </div>
+
+      <div id="content">
+        <div class="state">
+          <span class="brand-name state-logo">GetGrowline<svg class="stockmark" viewBox="0 0 44 12" aria-hidden="true"><polyline class="spark" points="0,8 10,6 20,8 30,5 44,0"/><polyline class="arrow" points="36,-1 44,0 39,6"/></svg></span>
+          <p>Enter a YouTube channel to see its analytics over time</p>
+        </div>
+      </div>
+
+      <footer class="site-foot">
+        <div class="foot-left">Developed by <b>GrowlineLabs</b> · YouTube channel analytics</div>
+        <div class="foot-right">
+          <button class="foot-link" id="open-feedback">💬 Send feedback</button>
+          <span class="foot-sep">·</span>
+          <span class="foot-muted">© <span id="foot-year"></span> GrowlineLabs</span>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <!-- ── Feedback modal ──────────────────────────────────── -->
+  <div class="modal-overlay" id="feedback-modal">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-hero"><h2>Send feedback</h2><p>Ideas, questions or bugs — we'd love to hear it.</p></div>
+      <div class="modal-body">
+        <form id="feedback-form">
+          <div class="fb-row"><label>Type</label>
+            <select id="fb-type" class="control"><option>Suggestion</option><option>Question</option><option>Bug</option><option>Other</option></select></div>
+          <div class="fb-row"><label>Your email (optional)</label>
+            <input type="email" id="fb-email" class="control" placeholder="you@example.com"></div>
+          <div class="fb-row"><label>Message</label>
+            <textarea id="fb-msg" class="control" rows="4" placeholder="Tell us what's on your mind…" required></textarea></div>
+          <div class="modal-actions">
+            <button type="submit" class="btn-upgrade">Send</button>
+            <button type="button" class="btn-ghost" id="fb-close">Cancel</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
-</div>
+  <!-- ── Build dashboard modal ───────────────────────────── -->
+  <div class="modal-overlay" id="dash-modal">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-hero"><h2>Create a dashboard</h2><p>Pick the metrics and view, save it, then open it anytime.</p></div>
+      <div class="modal-body">
+        <div class="fb-row"><label>Dashboard name</label>
+          <input type="text" id="db-name" class="control" placeholder="e.g. Yearly likes" maxlength="40"></div>
+        <div class="fb-row"><label>Metric</label>
+          <select id="db-metric" class="control"></select></div>
+        <div class="fb-row"><label>Chart type</label>
+          <select id="db-chart" class="control">
+            <option value="area">Area</option><option value="line">Line</option><option value="bar">Bar</option>
+            <option value="pie">Pie</option><option value="doughnut">Doughnut</option></select></div>
+        <div class="fb-row"><label>Group by</label>
+          <select id="db-gran" class="control"><option value="month">Month</option><option value="year">Year</option></select></div>
+        <div class="fb-row"><label>Show</label>
+          <select id="db-mode" class="control"><option value="cumulative">Cumulative total</option><option value="period">Per period</option></select></div>
+        <div class="modal-actions">
+          <button type="button" class="btn-upgrade" id="db-save">Save dashboard</button>
+          <button type="button" class="btn-ghost" id="db-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="pro-modal">
+    <div class="modal">
+      <div class="modal-hero">
+        <h2>Growline AI</h2>
+        <p>Unlock AI-powered insights for this channel.</p>
+      </div>
+      <div class="modal-body">
+        <div class="feat"><span class="ck">✓</span><div><b>Growth forecast</b> — predicted views & uploads for the next 30 days.</div></div>
+        <div class="feat"><span class="ck">✓</span><div><b>Best time to post</b> — AI finds your highest-performing upload windows.</div></div>
+        <div class="feat"><span class="ck">✓</span><div><b>Title & topic ideas</b> — generated from your best-performing videos.</div></div>
+        <div class="feat"><span class="ck">✓</span><div><b>Content gap finder</b> — topics your audience wants that you haven't covered.</div></div>
+        <div class="feat"><span class="ck">✓</span><div><b>Auto summary report</b> — a shareable AI write-up of channel performance.</div></div>
+        <div class="modal-actions">
+          <button class="btn-upgrade" id="btn-upgrade">Upgrade — $1.00</button>
+          <button class="btn-ghost" id="btn-close-pro">Maybe later</button>
+        </div>
+        <div class="price-row">One-time in-app purchase · billed via Google Play</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Video analytics modal ───────────────────────────── -->
+  <div class="modal-overlay" id="video-modal">
+    <div class="modal" style="max-width:620px">
+      <div id="video-modal-body"></div>
+    </div>
+  </div>
 
 <script>
-  const form       = document.getElementById('search-form');
-  const channelIn  = document.getElementById('channel-input');
-  const yearIn     = document.getElementById('year-input');
-  const viewSelect = document.getElementById('view-select');
-  const searchBtn  = document.getElementById('search-btn');
-  const content    = document.getElementById('content');
-  const historyEl  = document.getElementById('history-list');
+/* ============================================================
+   Growline dashboard
+   ============================================================ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-  let currentResult   = null;
-  let activeHistoryId = null;
+const form      = $('#search-form');
+const channelIn = $('#channel-input');
+const yearIn    = $('#year-input');
+const searchBtn = $('#search-btn');
+const content   = $('#content');
+const historyEl = $('#history-list');
 
-  // ── Search ──────────────────────────────────────────────
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const channel = channelIn.value.trim();
-    if (!channel) return;
-    setLoading(true);
-    activeHistoryId = null;
-    try {
-      const res  = await fetch('/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel, year: yearIn.value || null }),
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) { showError(data.error || 'Unknown error'); return; }
-      activeHistoryId = data.history_id;
-      renderResults(data.result);
-      await refreshHistory();
-    } catch (err) {
-      showError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  });
+let currentResult = null;
+let activeHistoryId = null;
+let currentView = 'dashboard';
+let chart = null;
+let rankPage = 0;
+let rankVids = [];
+let vmChart = null;
 
-  // ── View toggle ─────────────────────────────────────────
-  viewSelect.addEventListener('change', () => {
-    if (currentResult) renderResults(currentResult);
-  });
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  // ── Render dispatcher ───────────────────────────────────
-  function renderResults(r) {
-    currentResult = r;
-    if (viewSelect.value === 'summary') {
-      renderSummaryTable(r);
-    } else {
-      renderListView(r);
-    }
-  }
+/* ── Metric definitions ─────────────────────────────────── */
+const METRICS = {
+  videos:   { label: 'Videos',           short: 'Videos',   get: g => g.videos.length,                 fmt: fmtInt,  color: '#ff0033' },
+  views:    { label: 'Views',            short: 'Views',    get: g => g.views,                          fmt: fmtInt,  color: '#2f6df6' },
+  likes:    { label: 'Likes',            short: 'Likes',    get: g => g.likes,                          fmt: fmtInt,  color: '#14a44d' },
+  comments: { label: 'Comments',         short: 'Comments', get: g => g.comments,                       fmt: fmtInt,  color: '#f59e0b' },
+  avgdur:   { label: 'Avg duration',     short: 'Avg min',  get: g => g.videos.length ? g.duration_seconds/g.videos.length/60 : 0, fmt: fmtDec, color: '#7c3aed' },
+};
+const VIDEO_METRIC = {
+  views:    { label: 'Views',         get: v => v.views },
+  likes:    { label: 'Likes',         get: v => v.likes },
+  comments: { label: 'Comments',      get: v => v.comments },
+  duration: { label: 'Duration',      get: v => v.duration_seconds, fmt: fmtDuration },
+};
 
-  // ── List view ───────────────────────────────────────────
-  function renderListView(r) {
-    const yearLabel  = r.year_filter ? ` · ${r.year_filter}` : '';
-    const channelUrl = `https://www.youtube.com/channel/${r.channel_id}`;
+/* state for controls */
+const ui = { metric: 'views', chartType: 'area', granularity: 'month', year: 'all', topMetric: 'views', mode: 'cumulative', demo: 'age' };
 
-    let html = `
-      <div class="results-header">
-        <h1>${esc(r.channel_title)}</h1>
-        <div class="rh-meta">
-          <span>${r.total.toLocaleString()} video${r.total !== 1 ? 's' : ''}${yearLabel}</span>
-          <a href="${channelUrl}" target="_blank" rel="noopener">Open channel ↗</a>
-        </div>
-      </div>
-    `;
+/* Sample demographic datasets (real data needs channel OAuth) */
+const DEMO = {
+  age:     { title: 'By age',    type: 'doughnut', labels: ['13–17','18–24','25–34','35–44','45–54','55+'], data: [6,24,37,18,9,6] },
+  gender:  { title: 'By gender', type: 'doughnut', labels: ['Male','Female','Other'], data: [68,29,3] },
+  country: { title: 'By country',type: 'bar',      labels: ['USA','India','UK','Canada','Germany','Brazil','Australia'], data: [34,16,9,7,6,5,4] },
+  time:    { title: 'By time',   type: 'bar',      labels: ['12a','3a','6a','9a','12p','3p','6p','9p'], data: [4,3,6,10,14,18,28,17] },
+};
 
-    if (r.total === 0) {
-      const hint = r.year_filter
-        ? `No videos were uploaded in ${r.year_filter}.`
-        : 'This channel has no public videos.';
-      html += `
-        <div class="state-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-          <p>${hint}</p>
-          ${r.year_filter ? '<span class="empty-hint">Try removing the year filter to see all videos.</span>' : ''}
-        </div>
-      `;
-      content.innerHTML = html;
-      return;
-    }
+/* Estimated ad revenue from public view counts (NOT actual earnings). */
+function estEarnings(views) {
+  const lo = views / 1000 * 0.5;   // ~$0.50 RPM low
+  const hi = views / 1000 * 4.0;   // ~$4.00 RPM high
+  return `${fmtMoney(lo)} – ${fmtMoney(hi)}`;
+}
+function fmtMoney(n) {
+  n = +n || 0;
+  if (n >= 1e9) return '$' + (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n/1e3).toFixed(1) + 'K';
+  return '$' + Math.round(n);
+}
 
-    for (const group of r.groups) {
-      html += `
-        <div class="month-group">
-          <div class="month-heading">
-            ${esc(group.label)}
-            <span class="month-count">${group.videos.length} video${group.videos.length !== 1 ? 's' : ''}</span>
-          </div>
-          <div class="video-list">
-      `;
-      group.videos.forEach((v, i) => {
-        html += `
-          <div class="video-item">
-            <span class="video-num">${i + 1}</span>
-            <div class="video-info">
-              <div class="video-title">${esc(v.title)}</div>
-              <a class="video-link" href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.url)}</a>
-            </div>
-            <span class="video-date">${fmtDate(v.published_at)}</span>
-          </div>
-        `;
-      });
-      html += `</div></div>`;
-    }
+/* ── Search ─────────────────────────────────────────────── */
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const channel = channelIn.value.trim();
+  if (!channel) return;
 
-    content.innerHTML = html;
-    content.scrollTop = 0;
-  }
+  // If the input is a video link, analyze that single video instead.
+  if (isVideoUrl(channel)) { return analyzeVideo(channel); }
 
-  // ── Summary table view ──────────────────────────────────
-  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-
-  function renderSummaryTable(r) {
-    const yearLabel  = r.year_filter ? ` · ${r.year_filter}` : '';
-    const channelUrl = `https://www.youtube.com/channel/${r.channel_id}`;
-
-    let html = `
-      <div class="results-header">
-        <h1>${esc(r.channel_title)}</h1>
-        <div class="rh-meta">
-          <span>${r.total.toLocaleString()} video${r.total !== 1 ? 's' : ''}${yearLabel}</span>
-          <a href="${channelUrl}" target="_blank" rel="noopener">Open channel ↗</a>
-        </div>
-      </div>
-    `;
-
-    if (r.total === 0) {
-      const hint = r.year_filter
-        ? `No videos were uploaded in ${r.year_filter}.`
-        : 'This channel has no public videos.';
-      html += `
-        <div class="state-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/>
-            <line x1="12" y1="17" x2="12" y2="21"/>
-          </svg>
-          <p>${hint}</p>
-          ${r.year_filter ? '<span class="empty-hint">Try removing the year filter to see all videos.</span>' : ''}
-        </div>
-      `;
-      content.innerHTML = html;
-      return;
-    }
-
-    // Build year → month[1..12] count matrix
-    const matrix = {};
-    const years  = new Set();
-    for (const g of r.groups) {
-      years.add(g.year);
-      if (!matrix[g.year]) matrix[g.year] = {};
-      matrix[g.year][g.month] = g.videos.length;
-    }
-    const sortedYears = [...years].sort((a, b) => b - a);
-
-    // Column totals (sum across all years per month)
-    const monthTotals = Array.from({length: 12}, (_, i) =>
-      sortedYears.reduce((s, y) => s + (matrix[y]?.[i + 1] || 0), 0)
-    );
-    const grandTotal = monthTotals.reduce((a, b) => a + b, 0);
-
-    // Find highest month total to highlight it
-    const maxMonth = Math.max(...monthTotals);
-
-    html += `<div class="summary-wrap"><table class="summary-table">
-      <thead>
-        <tr>
-          <th>Year</th>
-          ${MONTH_NAMES.map(m => `<th>${m}</th>`).join('')}
-          <th class="total-col">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-    `;
-
-    for (const y of sortedYears) {
-      const rowTotal = sortedYears.length > 0
-        ? Object.values(matrix[y] || {}).reduce((a, b) => a + b, 0)
-        : 0;
-      html += `<tr><td>${y}</td>`;
-      for (let m = 1; m <= 12; m++) {
-        const count = matrix[y]?.[m] || 0;
-        const cls   = count === 0 ? '' : (monthTotals[m - 1] === maxMonth && maxMonth > 0 ? ' class="has-videos top-month"' : ' class="has-videos"');
-        html += `<td${cls}>${count || '–'}</td>`;
-      }
-      html += `<td class="total-col">${rowTotal}</td></tr>`;
-    }
-
-    html += `</tbody><tfoot><tr><td>Total</td>`;
-    for (let m = 0; m < 12; m++) {
-      const cls = monthTotals[m] === maxMonth && maxMonth > 0 ? ' class="top-month total-col"' : '';
-      html += `<td${cls}>${monthTotals[m] || '–'}</td>`;
-    }
-    html += `<td class="total-col">${grandTotal}</td></tr></tfoot></table></div>`;
-
-    content.innerHTML = html;
-    content.scrollTop = 0;
-  }
-
-  // ── History ─────────────────────────────────────────────
-  async function refreshHistory() {
-    const res  = await fetch('/api/history');
-    const list = await res.json();
-
-    if (!list.length) {
-      historyEl.innerHTML = '<p class="history-empty">No searches yet</p>';
-      return;
-    }
-
-    historyEl.innerHTML = list.slice().reverse().map(h => {
-      const yearTag = h.year_filter ? ` · ${h.year_filter}` : '';
-      const active  = h.id === activeHistoryId ? ' active' : '';
-      return `
-        <div class="history-item${active}" data-id="${h.id}">
-          <div class="hi-title">${esc(h.channel_title)}</div>
-          <div class="hi-meta">
-            <span>${h.timestamp}</span>
-            <span class="badge">${h.total} videos${yearTag}</span>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    historyEl.querySelectorAll('.history-item').forEach(el => {
-      el.addEventListener('click', () => loadHistory(parseInt(el.dataset.id)));
+  setLoading(true);
+  activeHistoryId = null;
+  try {
+    const res = await fetch('/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ channel, year: yearIn.value || null }),
     });
+    const data = await res.json();
+    if (!res.ok || data.error) { showError(data.error || 'Unknown error'); return; }
+    activeHistoryId = data.history_id;
+    currentResult = data.result;
+    ui.year = 'all';
+    render();
+    await refreshHistory();
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    setLoading(false);
   }
+});
 
-  async function loadHistory(id) {
-    setLoading(true);
-    activeHistoryId = id;
-    try {
-      const res  = await fetch(`/api/history/${id}`);
-      const data = await res.json();
-      if (data.error) { showError(data.error); return; }
-      renderResults(data);
-      await refreshHistory();
-    } catch (err) {
-      showError(err.message);
-    } finally {
-      setLoading(false);
-    }
+/* Detect a YouTube video link / ID and switch the button accordingly. */
+function isVideoUrl(s) {
+  return /(?:youtube\.com\/(?:watch\?[^ ]*v=|shorts\/|embed\/|live\/)|youtu\.be\/)[\w-]{11}/i.test(s)
+      || /^[\w-]{11}$/.test(s.trim());
+}
+channelIn.addEventListener('input', () => {
+  searchBtn.textContent = isVideoUrl(channelIn.value.trim()) ? 'Analyze Video' : 'Analyze Channel';
+});
+
+async function analyzeVideo(raw) {
+  setLoading(true);
+  $('#progress-line')?.classList.add('loading');
+  try {
+    const res = await fetch('/api/video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video: raw }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) { showError(data.error || 'Could not analyze that video'); return; }
+    currentResult = null;
+    renderVideoInline(data.video);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    setLoading(false);
+    $('#progress-line')?.classList.remove('loading');
   }
+}
 
-  // ── Helpers ─────────────────────────────────────────────
-  function setLoading(on) {
-    searchBtn.disabled = on;
-    if (on) {
-      content.innerHTML = `<div class="state-loading"><div class="spinner"></div><p>Fetching videos…</p></div>`;
-    }
-  }
+function videoLandingHTML(v) {
+  return `<div class="state">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+    <p>Showing analytics for <b>${esc(v.title)}</b>.<br>Search a channel name to see full channel analytics.</p>
+  </div>`;
+}
 
-  function showError(msg) {
-    content.innerHTML = `
-      <div class="state-error">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <p class="err-msg">${esc(msg)}</p>
+/* Render single-video analytics inline (no popup). */
+function renderVideoInline(v) {
+  const days = Math.max(1, Math.round((Date.now() - new Date(v.published_at).getTime()) / 86400000));
+  const perDay = v.views / days;
+  const likeRate = v.views ? (v.likes / v.views * 100) : 0;
+  const commentRate = v.views ? (v.comments / v.views * 100) : 0;
+  content.innerHTML = `
+    <div class="report-head">
+      <div class="breadcrumb">Videos › ${esc(v.channel_title || 'Video')} › Analytics</div>
+      <div class="report-title">
+        <h1>${esc(v.title)}</h1>
+        <span class="range">${v.channel_title ? esc(v.channel_title) + ' · ' : ''}Published ${fmtDate(v.published_at)} · ${fmtInt(days)} days online</span>
+        <a href="${esc(v.url)}" target="_blank" rel="noopener">Watch ↗</a>
       </div>
-    `;
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Estimated view growth</h2><div class="spacer"></div>
+        <span class="sample-tag">Estimated</span>
+      </div>
+      <div class="panel-body"><div class="chart-wrap"><canvas id="vm-chart"></canvas></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-body">
+        <div class="vm-stats">
+          ${vmStat('Views', fmtInt(v.views), '#2f6df6')}
+          ${vmStat('Likes', fmtInt(v.likes), '#14a44d')}
+          ${vmStat('Comments', fmtInt(v.comments), '#f59e0b')}
+          ${vmStat('Length', fmtDuration(v.duration_seconds), '#7c3aed')}
+          ${vmStat('Avg views/day', fmtInt(perDay), '#0ea5e9')}
+          ${vmStat('Like rate', likeRate.toFixed(2) + '%', '#ec4899')}
+          ${vmStat('Comment rate', commentRate.toFixed(2) + '%', '#f97316')}
+          ${vmStat('Est. revenue *', estEarnings(v.views), '#16a34a')}
+        </div>
+        <p class="vm-note">* Estimated from public view counts (~$0.50–$4.00 RPM). Actual revenue and real daily view history require channel sign-in (coming soon).</p>
+      </div>
+    </div>
+  `;
+  drawVideoCurve(v, '#vm-chart');
+}
+
+/* ── View tabs ──────────────────────────────────────────── */
+$$('#nav-tabs .nav-tab').forEach(t => t.addEventListener('click', () => {
+  $$('#nav-tabs .nav-tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  currentView = t.dataset.view;
+  if (currentResult) render();
+}));
+
+/* ── Render dispatcher ──────────────────────────────────── */
+function render() {
+  if (!currentResult) return;
+  if (currentView === 'list')       renderList();
+  else if (currentView === 'table') renderTable();
+  else                              renderDashboard();
+  placeTabs();
+}
+
+// Relocate the Dashboard/List/Table toggle: below the cumulative-views chart
+// on the dashboard, otherwise at the top of the list/table content.
+function placeTabs() {
+  const tabs = $('#nav-tabs'); if (!tabs) return;
+  tabs.classList.add('inline'); tabs.style.display = '';
+  const panel = content.querySelector('.panel');
+  if (currentView === 'dashboard' && panel) panel.after(tabs);
+  else content.prepend(tabs);
+}
+
+/* ── Data helpers ───────────────────────────────────────── */
+function activeGroups() {
+  let g = currentResult.groups.slice();
+  if (ui.year !== 'all') g = g.filter(x => x.year === +ui.year);
+  return g;
+}
+function allYears() {
+  return [...new Set(currentResult.groups.map(g => g.year))].sort((a,b)=>b-a);
+}
+function timelineSeries() {
+  // chronological ascending
+  let groups = activeGroups().slice().sort((a,b)=> a.year - b.year || a.month - b.month);
+  const m = METRICS[ui.metric];
+
+  // Build period buckets (month or year), each an aggregate pseudo-group.
+  let periods;
+  if (ui.granularity === 'year') {
+    const byYear = {};
+    for (const g of groups) {
+      byYear[g.year] = byYear[g.year] || { year:g.year, label:String(g.year), count:0, views:0, likes:0, comments:0, duration_seconds:0 };
+      const b = byYear[g.year];
+      b.count += g.videos.length; b.views += g.views; b.likes += g.likes;
+      b.comments += g.comments; b.duration_seconds += g.duration_seconds;
+    }
+    periods = Object.keys(byYear).sort().map(y => byYear[y]);
+  } else {
+    periods = groups.map(g => ({ year:g.year, month:g.month,
+      label:`${MONTHS[g.month-1]} ${g.year}`, count:g.videos.length,
+      views:g.views, likes:g.likes, comments:g.comments, duration_seconds:g.duration_seconds }));
   }
 
-  function esc(s) {
-    return String(s)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
-  }
+  const labels = periods.map(p => p.label);
+  const metricOf = p => m.get({ videos:{length:p.count}, views:p.views, likes:p.likes, comments:p.comments, duration_seconds:p.duration_seconds });
 
-  function fmtDate(iso) {
-    try {
-      return new Date(iso).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-    } catch { return ''; }
+  let values;
+  if (ui.mode === 'cumulative') {
+    let cCount=0, cViews=0, cLikes=0, cComments=0, cDur=0;
+    values = periods.map(p => {
+      cCount += p.count; cViews += p.views; cLikes += p.likes; cComments += p.comments; cDur += p.duration_seconds;
+      return metricOf({ count:cCount, views:cViews, likes:cLikes, comments:cComments, duration_seconds:cDur });
+    });
+  } else {
+    values = periods.map(metricOf);
+  }
+  return { labels, values };
+}
+function flatVideos() {
+  const out = [];
+  for (const g of activeGroups()) for (const v of g.videos) out.push(v);
+  return out;
+}
+
+/* ── Dashboard view ─────────────────────────────────────── */
+function renderDashboard() {
+  const r = currentResult;
+  const channelUrl = `https://www.youtube.com/channel/${r.channel_id}`;
+  const years = allYears();
+  const t = activeTotals();
+
+  content.innerHTML = `
+    <div class="report-head">
+      <div class="breadcrumb">Channels › ${esc(r.channel_title)} › Analytics</div>
+      <div class="report-title">
+        <h1>${esc(r.channel_title)}</h1>
+        <span class="range">${rangeLabel()}</span>
+        <a href="${channelUrl}" target="_blank" rel="noopener">Open channel ↗</a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>${chartTitle()}</h2>
+        <div class="spacer"></div>
+        <span class="zoom-hint">Drag to select a range · scroll to zoom · Ctrl-drag to pan</span>
+        <button class="btn-zoom" id="zoom-reset"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg> Reset zoom</button>
+      </div>
+      <div class="panel-body"><div class="chart-wrap"><canvas id="main-chart"></canvas></div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="field"><label>Metric</label>
+        <select class="control" id="c-metric">${Object.entries(METRICS).map(([k,m])=>opt(k,m.label,ui.metric)).join('')}</select>
+      </div>
+      <div class="field"><label>Chart</label>
+        <select class="control" id="c-chart">
+          ${opt('area','Area',ui.chartType)}${opt('line','Line',ui.chartType)}${opt('bar','Bar',ui.chartType)}
+          ${opt('pie','Pie',ui.chartType)}${opt('doughnut','Doughnut',ui.chartType)}
+        </select>
+      </div>
+      <div class="field"><label>Group by</label>
+        <select class="control" id="c-gran">${opt('month','Month',ui.granularity)}${opt('year','Year',ui.granularity)}</select>
+      </div>
+      <div class="field"><label>Show</label>
+        <select class="control" id="c-mode">${opt('cumulative','Cumulative total',ui.mode)}${opt('period','Per period',ui.mode)}</select>
+      </div>
+      <div class="field"><label>Year</label>
+        <select class="control" id="c-year">${opt('all','All years',ui.year)}${years.map(y=>opt(String(y),String(y),ui.year)).join('')}</select>
+      </div>
+
+      <div class="spacer"></div>
+
+      ${exportMenuHTML()}
+      ${shareMenuHTML()}
+    </div>
+
+    <div class="summary-line">
+      There were <span class="hl">${fmtInt(t.views)}</span> views across
+      <span class="hl">${fmtInt(t.videos)}</span> videos ${rangeLabel()}.
+    </div>
+
+    <div class="cards">
+      ${card('Videos', fmtInt(t.videos), '#ff0033', 'videos')}
+      ${card('Views', fmtInt(t.views), '#2f6df6', 'views')}
+      ${card('Likes', fmtInt(t.likes), '#14a44d', 'likes')}
+      ${card('Comments', fmtInt(t.comments), '#f59e0b', 'comments')}
+      ${card('Total watch length', fmtDuration(t.duration_seconds), '#7c3aed', 'avgdur')}
+      ${card('Est. revenue *', estEarnings(t.views), '#0ea5e9', 'views')}
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Top videos</h2><div class="spacer"></div>
+          <select class="control" id="c-topmetric" style="min-width:120px">
+            ${Object.entries(VIDEO_METRIC).map(([k,m])=>opt(k,m.label,ui.topMetric)).join('')}
+          </select>
+        </div>
+        <div id="rank-table"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Audience</h2><div class="spacer"></div>
+          <select class="control" id="c-demo" style="min-width:120px">
+            ${Object.entries(DEMO).map(([k,d])=>opt(k,d.title,ui.demo)).join('')}
+          </select>
+          <span class="sample-tag">Sample</span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-wrap" style="height:240px"><canvas id="demo-chart"></canvas></div>
+          <p style="font-size:12px;color:var(--muted);margin-top:12px;text-align:center">
+            Real age, gender, country &amp; time data needs channel sign-in (coming soon).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel ai-panel locked">
+      <div class="panel-head"><h2>Growline AI insights</h2><div class="spacer"></div><span class="pill">Pro</span></div>
+      <div class="panel-body">
+        <div class="ai-grid">
+          <div class="ai-card"><div class="t">📈 Growth forecast</div><div class="d">~${fmtInt(Math.round(t.views*0.08))} views expected next 30 days.</div></div>
+          <div class="ai-card"><div class="t">🕑 Best time to post</div><div class="d">Tuesdays 4–6pm perform best for you.</div></div>
+          <div class="ai-card"><div class="t">💡 Title ideas</div><div class="d">3 AI title suggestions ready.</div></div>
+          <div class="ai-card"><div class="t">🧭 Content gaps</div><div class="d">5 untapped topics for your audience.</div></div>
+        </div>
+      </div>
+      <div class="ai-lock">
+        <span class="badge-pro">★ Growline AI</span>
+        <button class="pro-btn" id="open-pro-2">Unlock for $1</button>
+      </div>
+    </div>
+  `;
+
+  wireControls();
+  drawMainChart();
+  drawDemoChart();
+  renderRankTable();
+}
+
+function activeTotals() {
+  if (ui.year === 'all') return currentResult.totals;
+  const g = activeGroups();
+  return {
+    videos: g.reduce((s,x)=>s+x.videos.length,0),
+    views: g.reduce((s,x)=>s+x.views,0),
+    likes: g.reduce((s,x)=>s+x.likes,0),
+    comments: g.reduce((s,x)=>s+x.comments,0),
+    duration_seconds: g.reduce((s,x)=>s+x.duration_seconds,0),
+  };
+}
+
+function wireControls() {
+  $('#c-metric')?.addEventListener('change', e => { ui.metric = e.target.value; drawMainChart(); $('.panel-head h2').textContent = chartTitle(); });
+  $('#c-chart')?.addEventListener('change', e => { ui.chartType = e.target.value; drawMainChart(); });
+  $('#c-gran')?.addEventListener('change', e => { ui.granularity = e.target.value; drawMainChart(); $('.panel-head h2').textContent = chartTitle(); });
+  $('#c-mode')?.addEventListener('change', e => { ui.mode = e.target.value; drawMainChart(); $('.panel-head h2').textContent = chartTitle(); });
+  $('#c-year')?.addEventListener('change', e => { ui.year = e.target.value; rankPage = 0; renderDashboard(); });
+  $('#c-topmetric')?.addEventListener('change', e => { ui.topMetric = e.target.value; rankPage = 0; renderRankTable(); });
+  $('#c-demo')?.addEventListener('change', e => { ui.demo = e.target.value; drawDemoChart(); });
+  $('#zoom-reset')?.addEventListener('click', () => { chart?.resetZoom?.(); });
+  $$('.card[data-metric]').forEach(c => c.addEventListener('click', () => {
+    ui.metric = c.dataset.metric;
+    $$('.card[data-metric]').forEach(x => x.classList.toggle('active', x === c));
+    const sel = $('#c-metric'); if (sel) sel.value = ui.metric;
+    drawMainChart();
+    const h = $('.panel .panel-head h2'); if (h) h.textContent = chartTitle();
+  }));
+  wireMenus();
+}
+
+function chartTitle() {
+  return (ui.mode === 'cumulative' ? 'Cumulative ' : '') + METRICS[ui.metric].label + (ui.mode === 'cumulative' ? ' since launch' : ' over time');
+}
+// Total of the active metric for the currently visible range, shown in the panel pill
+function pillStat() {
+  const t = activeTotals();
+  const m = METRICS[ui.metric];
+  const vals = { videos: t.videos, views: t.views, likes: t.likes, comments: t.comments,
+                 avgdur: t.videos ? t.duration_seconds / t.videos / 60 : 0 };
+  return `${m.fmt(vals[ui.metric])} ${m.short.toLowerCase()}`;
+}
+
+/* ── Charts ─────────────────────────────────────────────── */
+// Brand gradient (blue→purple→red) for the main chart stroke + fill
+function themeStroke(c) {
+  const { ctx, chartArea } = c.chart; if (!chartArea) return '#7c3aed';
+  const g = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+  g.addColorStop(0, '#2f6df6'); g.addColorStop(.5, '#7c3aed'); g.addColorStop(1, '#ff0033');
+  return g;
+}
+function themeFill(c) {
+  const { ctx, chartArea } = c.chart; if (!chartArea) return 'rgba(124,58,237,.12)';
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, 'rgba(124,58,237,.22)'); g.addColorStop(1, 'rgba(47,109,246,.02)');
+  return g;
+}
+// Grafana-style vertical crosshair following the cursor on the main chart
+const crosshairPlugin = {
+  id: 'crosshair',
+  afterDatasetsDraw(c) {
+    const a = c.tooltip?._active; if (!a || !a.length) return;
+    const x = a[0].element.x; const { top, bottom } = c.chartArea;
+    const ctx = c.ctx; ctx.save();
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom);
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(124,58,237,.55)'; ctx.setLineDash([4, 4]); ctx.stroke();
+    ctx.restore();
+  }
+};
+function drawMainChart() {
+  const ctx = $('#main-chart'); if (!ctx) return;
+  if (chart) { chart.destroy(); chart = null; }
+  const { labels, values } = timelineSeries();
+  const m = METRICS[ui.metric];
+  const isCircular = ui.chartType === 'pie' || ui.chartType === 'doughnut';
+
+  const palette = ['#2f6df6','#ff0033','#14a44d','#f59e0b','#7c3aed','#0ea5e9','#ec4899','#84cc16','#f97316','#06b6d4'];
+
+  chart = new Chart(ctx, {
+    plugins: isCircular ? [] : [crosshairPlugin],
+    type: ui.chartType === 'area' ? 'line' : ui.chartType,
+    data: {
+      labels,
+      datasets: [{
+        label: m.label,
+        data: values,
+        borderColor: isCircular ? m.color : (c => themeStroke(c)),
+        backgroundColor: isCircular ? labels.map((_,i)=>palette[i%palette.length]) : (c => themeFill(c)),
+        fill: ui.chartType === 'area',
+        tension: .35,
+        borderWidth: 3,
+        pointRadius: ui.chartType === 'line' || ui.chartType === 'area' ? 3 : 0,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#7c3aed',
+        borderDash: (ui.chartType === 'line' || ui.chartType === 'area') ? [10, 7] : undefined,
+        borderDashOffset: 0,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
+      animation: (ui.chartType === 'line' || ui.chartType === 'area') ? {
+        x: { type: 'number', easing: 'easeOutQuart', duration: 650, from: NaN,
+             delay: c => (c.type === 'data' && c.mode === 'default' && !c._drawn) ? (c.dataIndex / Math.max(1, labels.length)) * 650 : 0 },
+        y: { type: 'number', easing: 'easeOutQuart', duration: 650, from: ctx => ctx.chart.scales.y.getPixelForValue(0),
+             delay: c => (c.type === 'data' && c.mode === 'default' && !c._drawn) ? (c.dataIndex / Math.max(1, labels.length)) * 650 : 0 },
+      } : { duration: 400 },
+      plugins: {
+        legend: { display: isCircular, position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+        tooltip: { enabled: !isCircular, mode: 'index', intersect: false,
+          backgroundColor: 'rgba(15,23,42,.94)', padding: 10, cornerRadius: 8, displayColors: false,
+          titleColor: '#cbd5e1', titleFont: { size: 11, weight: '600' }, bodyColor: '#fff', bodyFont: { size: 14, weight: '700' },
+          callbacks: { title: c => c[0]?.label || '', label: c => `${m.label}: ${m.fmt(c.parsed.y ?? c.parsed)}` } },
+        zoom: isCircular ? {} : {
+          zoom: { wheel: { enabled: true }, pinch: { enabled: true },
+            drag: { enabled: true, backgroundColor: 'rgba(47,109,246,.15)', borderColor: '#2f6df6', borderWidth: 1 },
+            mode: 'x' },
+          pan: { enabled: true, mode: 'x', modifierKey: 'ctrl' },
+          limits: { x: { minRange: 1 } },
+        },
+      },
+      scales: isCircular ? {} : {
+        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,.05)' }, ticks: { callback: v => m.fmt(v) } },
+        x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 14 } },
+      },
+    },
+  });
+  setTimeout(startLineFlow, 700);
+}
+
+// Continuously march the dashes so the line looks like it's flowing
+let flowRAF = null;
+function startLineFlow() {
+  if (flowRAF) cancelAnimationFrame(flowRAF);
+  if (ui.chartType !== 'line' && ui.chartType !== 'area') return;
+  const step = () => {
+    if (!chart || !chart.data.datasets[0]) return;
+    // pause the flow while hovering so the crosshair tooltip stays visible
+    if (!chart.tooltip?._active?.length) {
+      chart.data.datasets[0].borderDashOffset -= 0.6;
+      chart.update('none');
+    }
+    flowRAF = requestAnimationFrame(step);
+  };
+  flowRAF = requestAnimationFrame(step);
+}
+
+let demoChart = null;
+function drawDemoChart() {
+  const ctx = $('#demo-chart'); if (!ctx) return;
+  if (demoChart) demoChart.destroy();
+  const d = DEMO[ui.demo] || DEMO.age;
+  const palette = ['#2f6df6','#ff0033','#14a44d','#f59e0b','#7c3aed','#0ea5e9','#ec4899'];
+  const circular = d.type === 'doughnut' || d.type === 'pie';
+  demoChart = new Chart(ctx, {
+    type: d.type,
+    data: {
+      labels: d.labels,
+      datasets: [{ data: d.data,
+        backgroundColor: circular ? d.labels.map((_,i)=>palette[i%palette.length]) : hexA('#2f6df6',.75),
+        borderWidth: 0, borderRadius: circular ? 0 : 6 }],
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: circular, position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+                 tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed.y ?? c.parsed}%` } } },
+      scales: circular ? {} : { y: { beginAtZero: true, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,.05)' } }, x: { grid: { display: false } } } },
+  });
+}
+
+/* ── Quick view page (bar + table) ──────────────────────── */
+let quickChart = null;
+function renderQuickView(key) {
+  const d = DEMO[key] || DEMO.age;
+  const rows = d.labels.map((l,i)=> ({ label: l, val: d.data[i] }));
+  content.innerHTML = `
+    <div class="report-head"><span class="crumb" id="qv-back">Dashboard</span><span class="crumb-sep">›</span><span>Quick views</span><span class="crumb-sep">›</span><b>${esc(d.title)}</b></div>
+    <button class="vbtn" id="qv-back2" style="margin-bottom:12px">← Back to dashboard</button>
+    <div class="panel"><div class="panel-head"><h2>${esc(d.title)}</h2><div class="spacer"></div><span class="sample-tag">Sample</span></div>
+      <div class="panel-body"><div class="chart-wrap" style="height:300px"><canvas id="qv-chart"></canvas></div></div></div>
+    <div class="panel"><div class="panel-head"><h2>Breakdown</h2></div>
+      <div class="panel-body"><table class="data-table"><thead><tr><th>Segment</th><th>Share</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${r.val}%</td></tr>`).join('')}</tbody></table></div></div>`;
+  $('#qv-back')?.addEventListener('click', goDashboard);
+  $('#qv-back2')?.addEventListener('click', goDashboard);
+  const palette = ['#2f6df6','#ff0033','#14a44d','#f59e0b','#7c3aed','#0ea5e9','#ec4899'];
+  if (quickChart) quickChart.destroy();
+  quickChart = new Chart($('#qv-chart'), {
+    type: 'bar',
+    data: { labels: d.labels, datasets: [{ data: d.data, backgroundColor: d.labels.map((_,i)=>palette[i%palette.length]), borderWidth: 0, borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}%` } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' }, grid: { color: 'rgba(0,0,0,.05)' } }, x: { grid: { display: false } } } },
+  });
+}
+
+/* ── Ranked table ───────────────────────────────────────── */
+const RANK_PAGE_SIZE = 10;
+function renderRankTable() {
+  const host = $('#rank-table'); if (!host) return;
+  const vm = VIDEO_METRIC[ui.topMetric];
+  const fmt = vm.fmt || fmtInt;
+  const vids = flatVideos().sort((a,b)=> vm.get(b) - vm.get(a));
+  const total = vids.reduce((s,v)=> s + vm.get(v), 0) || 1;
+  const max = vids.length ? vm.get(vids[0]) : 1;
+  const pages = Math.max(1, Math.ceil(vids.length / RANK_PAGE_SIZE));
+  rankPage = Math.min(rankPage, pages - 1);
+  const slice = vids.slice(rankPage*RANK_PAGE_SIZE, rankPage*RANK_PAGE_SIZE + RANK_PAGE_SIZE);
+  rankVids = vids;
+
+  host.innerHTML = `
+    <table class="rank">
+      <thead><tr><th>Video</th><th class="num">${vm.label}</th><th class="num">%</th><th></th></tr></thead>
+      <tbody>
+        ${slice.map(v => {
+          const val = vm.get(v);
+          const pct = ((val/total)*100);
+          const w = max ? (val/max*100) : 0;
+          const gi = vids.indexOf(v);
+          return `<tr>
+            <td class="bar-cell"><div class="bar-fill" style="width:${w}%"></div>
+              <span><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(trunc(v.title,52))}</a></span></td>
+            <td class="num">${fmt(val)}</td>
+            <td class="num">${pct.toFixed(2)}%</td>
+            <td class="num"><button class="vbtn" data-vid="${gi}" title="View analytics">📊</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div class="pager">
+      <span>${vids.length ? (rankPage*RANK_PAGE_SIZE+1) : 0}–${Math.min((rankPage+1)*RANK_PAGE_SIZE, vids.length)} of ${vids.length}</span>
+      <div class="spacer"></div>
+      <button id="rk-prev" ${rankPage===0?'disabled':''}>‹</button>
+      <button id="rk-next" ${rankPage>=pages-1?'disabled':''}>›</button>
+    </div>
+  `;
+  $('#rk-prev')?.addEventListener('click', ()=>{ rankPage=Math.max(0,rankPage-1); renderRankTable(); });
+  $('#rk-next')?.addEventListener('click', ()=>{ rankPage++; renderRankTable(); });
+  host.querySelectorAll('.vbtn[data-vid]').forEach(b =>
+    b.addEventListener('click', () => openVideoModal(rankVids[+b.dataset.vid])));
+}
+
+/* ── Per-video analytics modal ──────────────────────────── */
+function openVideoModal(v) {
+  if (!v) return;
+  const modal = $('#video-modal'); const body = $('#video-modal-body');
+  if (!modal || !body) return;
+  const days = Math.max(1, Math.round((Date.now() - new Date(v.published_at).getTime()) / 86400000));
+  const perDay = v.views / days;
+  const likeRate = v.views ? (v.likes / v.views * 100) : 0;
+  const commentRate = v.views ? (v.comments / v.views * 100) : 0;
+
+  body.innerHTML = `
+    <div class="vm-head">
+      <h2>${esc(v.title)}</h2>
+      <button class="vm-close" id="vm-close" aria-label="Close">✕</button>
+    </div>
+    <div class="vm-sub">${v.channel_title ? esc(v.channel_title) + ' · ' : ''}Published ${fmtDate(v.published_at)} · ${fmtInt(days)} days online · <a href="${esc(v.url)}" target="_blank" rel="noopener">Watch ↗</a></div>
+    <div class="vm-stats">
+      ${vmStat('Views', fmtInt(v.views), '#2f6df6')}
+      ${vmStat('Likes', fmtInt(v.likes), '#14a44d')}
+      ${vmStat('Comments', fmtInt(v.comments), '#f59e0b')}
+      ${vmStat('Length', fmtDuration(v.duration_seconds), '#7c3aed')}
+      ${vmStat('Avg views/day', fmtInt(perDay), '#0ea5e9')}
+      ${vmStat('Like rate', likeRate.toFixed(2) + '%', '#ec4899')}
+      ${vmStat('Comment rate', commentRate.toFixed(2) + '%', '#f97316')}
+      ${vmStat('Est. revenue *', estEarnings(v.views), '#16a34a')}
+    </div>
+    <div class="vm-chart-head">Estimated view growth <span class="sample-tag">Estimated</span></div>
+    <div class="chart-wrap" style="height:200px"><canvas id="vm-chart"></canvas></div>
+    <p class="vm-note">* Estimated from public view counts (~$0.50–$4.00 RPM). Actual revenue and real daily view history require channel sign-in (coming soon).</p>
+  `;
+  modal.classList.add('open');
+  $('#vm-close')?.addEventListener('click', closeVideoModal);
+  drawVideoCurve(v, '#vm-chart');
+}
+
+/* Modelled cumulative view curve (front-loaded growth); final point = real total. */
+function drawVideoCurve(v, sel) {
+  const days = Math.max(1, Math.round((Date.now() - new Date(v.published_at).getTime()) / 86400000));
+  const N = 24;
+  const labels = [], data = [];
+  const denom = 1 - Math.exp(-3);
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    labels.push(i === 0 ? 'Day 0' : (i === N ? 'Day ' + fmtInt(days) : ''));
+    data.push(Math.round(v.views * (1 - Math.exp(-3 * t)) / denom));
+  }
+  if (vmChart) { vmChart.destroy(); vmChart = null; }
+  const ctx = $(sel); if (!ctx) return;
+  vmChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ data, borderColor: '#2f6df6', backgroundColor: hexA('#2f6df6', .14),
+      fill: true, tension: .35, borderWidth: 2, pointRadius: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ~' + fmtInt(c.parsed.y) + ' views' } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: x => fmtInt(x) }, grid: { color: 'rgba(0,0,0,.05)' } },
+                x: { grid: { display: false } } } },
+  });
+}
+function vmStat(k, v, c) {
+  return `<div class="vm-stat"><div class="vm-k"><span class="dot" style="background:${c}"></span>${k}</div><div class="vm-v">${v}</div></div>`;
+}
+function closeVideoModal() { $('#video-modal')?.classList.remove('open'); }
+$('#video-modal')?.addEventListener('click', e => { if (e.target.id === 'video-modal') closeVideoModal(); });
+
+/* ── List view ──────────────────────────────────────────── */
+function renderList() {
+  const r = currentResult;
+  const groups = activeGroups();
+  let html = headerHTML(r) + yearToolbarHTML();
+  if (!groups.length) { content.innerHTML = html + emptyHTML(); return; }
+  for (const g of groups) {
+    html += `<div class="month-group">
+      <div class="month-heading">${esc(g.label)}<span class="month-count">${g.videos.length} video${g.videos.length!==1?'s':''} · ${fmtInt(g.views)} views</span></div>`;
+    g.videos.forEach((v,i)=>{
+      html += `<div class="vrow"><span class="n">${i+1}</span><div class="info">
+        <div class="vt"><a href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.title)}</a></div>
+        <div class="vm"><span>▶ ${fmtInt(v.views)}</span><span>♥ ${fmtInt(v.likes)}</span><span>💬 ${fmtInt(v.comments)}</span><span>⏱ ${fmtDuration(v.duration_seconds)}</span><span>${fmtDate(v.published_at)}</span></div>
+      </div></div>`;
+    });
+    html += `</div>`;
+  }
+  content.innerHTML = html;
+  wireYearToolbar();
+}
+
+/* ── Table view (month × year pivot of selected metric) ── */
+function renderTable() {
+  const r = currentResult;
+  let html = headerHTML(r) + `<div class="toolbar">
+    <div class="field"><label>Metric</label><select class="control" id="t-metric">${Object.entries(METRICS).map(([k,m])=>opt(k,m.label,ui.metric)).join('')}</select></div>
+    <div class="spacer"></div>${exportMenuHTML()}${shareMenuHTML()}</div>`;
+
+  const m = METRICS[ui.metric];
+  const matrix = {}; const years = new Set();
+  for (const g of r.groups) { years.add(g.year); (matrix[g.year] ??= {})[g.month] = m.get(g); }
+  const sy = [...years].sort((a,b)=>b-a);
+  const colTot = Array.from({length:12},(_,i)=> sy.reduce((s,y)=> s+(matrix[y]?.[i+1]||0),0));
+  const grand = colTot.reduce((a,b)=>a+b,0);
+
+  html += `<div class="panel"><div style="overflow-x:auto"><table class="rank" style="min-width:760px">
+    <thead><tr><th>Year</th>${MONTHS.map(mm=>`<th class="num">${mm}</th>`).join('')}<th class="num">Total</th></tr></thead><tbody>`;
+  for (const y of sy) {
+    const rowTot = Object.values(matrix[y]||{}).reduce((a,b)=>a+b,0);
+    html += `<tr><td><b>${y}</b></td>${Array.from({length:12},(_,i)=>{
+      const val = matrix[y]?.[i+1]||0; return `<td class="num">${val?m.fmt(val):'–'}</td>`; }).join('')}<td class="num"><b>${m.fmt(rowTot)}</b></td></tr>`;
+  }
+  html += `<tr><td><b>Total</b></td>${colTot.map(c=>`<td class="num"><b>${c?m.fmt(c):'–'}</b></td>`).join('')}<td class="num"><b>${m.fmt(grand)}</b></td></tr>`;
+  html += `</tbody></table></div></div>`;
+  content.innerHTML = html;
+  $('#t-metric')?.addEventListener('change', e => { ui.metric = e.target.value; renderTable(); });
+  wireMenus();
+}
+
+/* ── Shared HTML bits ───────────────────────────────────── */
+function headerHTML(r) {
+  return `<div class="report-head"><div class="breadcrumb">Channels › ${esc(r.channel_title)}</div>
+    <div class="report-title"><h1>${esc(r.channel_title)}</h1><span class="range">${rangeLabel()}</span>
+    <a href="https://www.youtube.com/channel/${r.channel_id}" target="_blank" rel="noopener">Open channel ↗</a></div></div>`;
+}
+function yearToolbarHTML() {
+  const years = allYears();
+  return `<div class="toolbar"><div class="field"><label>Year</label>
+    <select class="control" id="c-year">${opt('all','All years',ui.year)}${years.map(y=>opt(String(y),String(y),ui.year)).join('')}</select></div>
+    <div class="spacer"></div>${exportMenuHTML()}${shareMenuHTML()}</div>`;
+}
+function wireYearToolbar() {
+  $('#c-year')?.addEventListener('change', e => { ui.year = e.target.value; render(); });
+  wireMenus();
+}
+function emptyHTML() {
+  return `<div class="state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/></svg>
+    <p>No videos${ui.year!=='all'?` in ${ui.year}`:''}.</p></div>`;
+}
+function rangeLabel() {
+  const g = activeGroups();
+  if (!g.length) return '';
+  const sorted = g.slice().sort((a,b)=> a.year-b.year || a.month-b.month);
+  const f = sorted[0], l = sorted[sorted.length-1];
+  return `${MONTHS[f.month-1]} ${f.year} – ${MONTHS[l.month-1]} ${l.year}`;
+}
+function card(k, v, color, mkey) {
+  const active = mkey && mkey === ui.metric ? ' active' : '';
+  const attr = mkey ? ` data-metric="${mkey}"` : '';
+  return `<div class="card${active}"${attr}><div class="k"><span class="dot" style="background:${color}"></span>${k}</div><div class="v">${v}</div></div>`;
+}
+function opt(val, label, cur) { return `<option value="${val}" ${val===cur?'selected':''}>${label}</option>`; }
+
+/* ── Export menu ────────────────────────────────────────── */
+function exportMenuHTML() {
+  return `<div class="menu" id="export-menu">
+    <button class="menu-btn" data-menu-toggle><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>Export<span class="chev"></span></button>
+    <div class="menu-pop">
+      <div class="menu-label">Download</div>
+      <button data-export="png">🖼️ Chart image (PNG)</button>
+      <button data-export="csv">📄 CSV</button>
+      <button data-export="xlsx">📊 Excel (.xlsx)</button>
+      <button data-export="pdf">📕 PDF</button>
+      <button data-export="doc">📝 Word (.doc)</button>
+    </div></div>`;
+}
+/* ── Share menu (all platforms) ─────────────────────────── */
+function shareMenuHTML() {
+  return `<div class="menu" id="share-menu">
+    <button class="menu-btn" data-menu-toggle><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Share<span class="chev"></span></button>
+    <div class="menu-pop">
+      <button data-share="native">📲 Share…</button>
+      <div class="menu-sep"></div>
+      <div class="menu-label">Social</div>
+      <button data-share="x">𝕏 X (Twitter)</button>
+      <button data-share="facebook">📘 Facebook</button>
+      <button data-share="linkedin">💼 LinkedIn</button>
+      <button data-share="whatsapp">🟢 WhatsApp</button>
+      <button data-share="telegram">✈️ Telegram</button>
+      <button data-share="reddit">👽 Reddit</button>
+      <button data-share="pinterest">📌 Pinterest</button>
+      <button data-share="tumblr">📰 Tumblr</button>
+      <div class="menu-sep"></div>
+      <button data-share="email">✉️ Email</button>
+      <button data-share="copy">🔗 Copy link</button>
+    </div></div>`;
+}
+
+function wireMenus() {
+  $$('[data-menu-toggle]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const pop = btn.nextElementSibling;
+      const wasOpen = pop.classList.contains('open');
+      $$('.menu-pop').forEach(p => p.classList.remove('open'));
+      if (!wasOpen) pop.classList.add('open');
+    });
+  });
+  $$('[data-export]').forEach(b => b.addEventListener('click', () => doExport(b.dataset.export)));
+  $$('[data-share]').forEach(b => b.addEventListener('click', () => doShare(b.dataset.share)));
+}
+document.addEventListener('click', () => $$('.menu-pop').forEach(p => p.classList.remove('open')));
+
+/* ── Sidebar (wired once at startup) ────────────────────── */
+function wireSidebar() {
+  // Quick views → dedicated demographic page (bar + table)
+  $$('.mn-item[data-quick]').forEach(b => b.addEventListener('click', () => {
+    $$('.mn-item').forEach(x => x.classList.remove('active')); b.classList.add('active');
+    renderQuickView(b.dataset.quick);
+    document.body.classList.remove('sidebar-open');
+  }));
+  // Dashboard nav item → back to main dashboard
+  $$('.mn-item[data-nav]').forEach(b => b.addEventListener('click', goDashboard));
+  // Build a custom dashboard
+  $('#save-dash')?.addEventListener('click', openDashBuilder);
+  $('#db-cancel')?.addEventListener('click', () => $('#dash-modal').classList.remove('open'));
+  $('#dash-modal')?.addEventListener('click', e => { if (e.target.id === 'dash-modal') e.target.classList.remove('open'); });
+  $('#db-save')?.addEventListener('click', saveDashFromBuilder);
+  renderDashes();
+  // Hamburger + scrim (mobile drawer)
+  $('#menu-toggle')?.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
+  $('#scrim')?.addEventListener('click', () => document.body.classList.remove('sidebar-open'));
+}
+
+/* ── Custom dashboards ──────────────────────────────────── */
+function loadDashes() { try { return JSON.parse(localStorage.getItem('gg_dashboards') || '[]'); } catch { return []; } }
+function storeDashes(d) { localStorage.setItem('gg_dashboards', JSON.stringify(d)); }
+function openDashBuilder() {
+  const sel = $('#db-metric');
+  sel.innerHTML = Object.entries(METRICS).map(([k,m]) => `<option value="${k}">${m.label}</option>`).join('');
+  $('#db-name').value = ''; sel.value = ui.metric; $('#db-chart').value = ui.chartType;
+  $('#db-gran').value = ui.granularity; $('#db-mode').value = ui.mode;
+  $('#dash-modal').classList.add('open');
+}
+function saveDashFromBuilder() {
+  const name = ($('#db-name').value || '').trim();
+  if (!name) { $('#db-name').focus(); return; }
+  const d = loadDashes();
+  d.push({ name, metric: $('#db-metric').value, chartType: $('#db-chart').value,
+           granularity: $('#db-gran').value, mode: $('#db-mode').value, year: 'all' });
+  storeDashes(d); renderDashes(); $('#dash-modal').classList.remove('open');
+}
+function renderDashes() {
+  const box = $('#saved-dash'); if (!box) return;
+  const d = loadDashes();
+  if (!d.length) { box.innerHTML = '<p class="mn-empty">No saved dashboards</p>'; return; }
+  box.innerHTML = d.map((x,i) =>
+    `<button class="mn-item" data-dash="${i}"><span class="ic">📊</span> ${esc(x.name)}<div class="spacer"></div><span class="mini del" data-del="${i}" title="Delete">×</span></button>`
+  ).join('');
+  box.querySelectorAll('[data-dash]').forEach(b => b.addEventListener('click', e => {
+    if (e.target.dataset.del !== undefined) return; applyDash(+b.dataset.dash);
+  }));
+  box.querySelectorAll('[data-del]').forEach(s => s.addEventListener('click', e => {
+    e.stopPropagation(); const arr = loadDashes(); arr.splice(+s.dataset.del, 1); storeDashes(arr); renderDashes();
+  }));
+}
+function applyDash(i) {
+  const x = loadDashes()[i]; if (!x) return;
+  Object.assign(ui, { metric: x.metric, chartType: x.chartType, granularity: x.granularity, mode: x.mode, year: x.year || 'all' });
+  $$('.mn-item').forEach(b => b.classList.remove('active'));
+  currentView = 'dashboard';
+  if (currentResult) render();
+  document.body.classList.remove('sidebar-open');
+}
+function goDashboard() {
+  $$('.mn-item').forEach(x => x.classList.remove('active'));
+  $('.mn-item[data-nav="dashboard"]')?.classList.add('active');
+  currentView = 'dashboard';
+  if (currentResult) render();
+  else content.innerHTML = `<div class="state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#c8cdd6" stroke-width="1.4"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg><p>Enter a YouTube channel to see its analytics over time</p></div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.body.classList.remove('sidebar-open');
+}
+wireSidebar();
+
+/* ── Export logic ───────────────────────────────────────── */
+function reportRows() {
+  // chronological rows of the active metric series + core stats per period
+  const groups = activeGroups().slice().sort((a,b)=> a.year-b.year || a.month-b.month);
+  return groups.map(g => ({
+    Period: g.label,
+    Videos: g.videos.length,
+    Views: g.views,
+    Likes: g.likes,
+    Comments: g.comments,
+    'Avg duration (min)': g.videos.length ? +(g.duration_seconds/g.videos.length/60).toFixed(1) : 0,
+  }));
+}
+function baseName() {
+  return 'growline_' + (currentResult?.channel_title || 'channel').replace(/[^a-z0-9]+/gi,'_').toLowerCase();
+}
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = Object.assign(document.createElement('a'), { href: url, download: filename });
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+function doExport(kind) {
+  if (!currentResult) return;
+  const rows = reportRows();
+  if (kind === 'png') {
+    if (!chart) return alert('Open the Dashboard view to export the chart image.');
+    const a = Object.assign(document.createElement('a'), { href: chart.toBase64Image('image/png',1), download: baseName()+'_chart.png' });
+    a.click();
+  } else if (kind === 'csv') {
+    const head = Object.keys(rows[0]||{Period:''});
+    const csv = [head.join(','), ...rows.map(r => head.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
+    download(new Blob([csv], { type: 'text/csv;charset=utf-8' }), baseName()+'.csv');
+  } else if (kind === 'xlsx') {
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Analytics');
+    XLSX.writeFile(wb, baseName()+'.xlsx');
+  } else if (kind === 'pdf') {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    pdf.setFontSize(16); pdf.text(`Growline — ${currentResult.channel_title}`, 14, 18);
+    pdf.setFontSize(10); pdf.setTextColor(120); pdf.text(rangeLabel(), 14, 25);
+    if (chart) { try { pdf.addImage(chart.toBase64Image('image/png',1), 'PNG', 14, 30, 180, 80); } catch {} }
+    pdf.autoTable({ startY: chart ? 118 : 32, head: [Object.keys(rows[0]||{Period:''})], body: rows.map(r=>Object.values(r)), styles:{ fontSize:8 }, headStyles:{ fillColor:[47,109,246] } });
+    pdf.save(baseName()+'.pdf');
+  } else if (kind === 'doc') {
+    const head = Object.keys(rows[0]||{Period:''});
+    const html = `<html><head><meta charset="utf-8"></head><body>
+      <h2>Growline — ${esc(currentResult.channel_title)}</h2><p>${rangeLabel()}</p>
+      <table border="1" cellspacing="0" cellpadding="6"><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr>
+      ${rows.map(r=>`<tr>${head.map(h=>`<td>${r[h]}</td>`).join('')}</tr>`).join('')}</table></body></html>`;
+    download(new Blob(['\ufeff'+html], { type: 'application/msword' }), baseName()+'.doc');
+  }
+}
+
+/* ── Share logic ────────────────────────────────────────── */
+function shareText() {
+  const t = activeTotals();
+  return `${currentResult.channel_title}: ${fmtInt(t.views)} views across ${fmtInt(t.videos)} videos — analyzed with Growline`;
+}
+function shareUrl() { return `https://www.youtube.com/channel/${currentResult.channel_id}`; }
+async function doShare(target) {
+  if (!currentResult) return;
+  const text = shareText(), url = shareUrl();
+  const T = encodeURIComponent(text), U = encodeURIComponent(url);
+  const links = {
+    x:        `https://twitter.com/intent/tweet?text=${T}&url=${U}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${U}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${U}`,
+    whatsapp: `https://wa.me/?text=${T}%20${U}`,
+    telegram: `https://t.me/share/url?url=${U}&text=${T}`,
+    reddit:   `https://www.reddit.com/submit?url=${U}&title=${T}`,
+    pinterest:`https://pinterest.com/pin/create/button/?url=${U}&description=${T}`,
+    tumblr:   `https://www.tumblr.com/share/link?url=${U}&name=${T}`,
+    email:    `mailto:?subject=${encodeURIComponent('Growline analytics: '+currentResult.channel_title)}&body=${T}%0A%0A${U}`,
+  };
+  if (target === 'native') {
+    if (navigator.share) { try { await navigator.share({ title: 'Growline', text, url }); } catch {} }
+    else alert('Native share is not supported on this device.');
+    return;
+  }
+  if (target === 'copy') {
+    try { await navigator.clipboard.writeText(`${text}\n${url}`); toast('Link copied'); } catch { alert(url); }
+    return;
+  }
+  window.open(links[target], '_blank', 'noopener,width=600,height=520');
+}
+
+/* ── History ────────────────────────────────────────────── */
+async function refreshHistory() {
+  const res = await fetch('/api/history');
+  const list = await res.json();
+  if (!list.length) { historyEl.innerHTML = '<p class="history-empty">No searches yet</p>'; return; }
+  historyEl.innerHTML = list.slice().reverse().map(h => {
+    const yt = h.year_filter ? ` · ${h.year_filter}` : '';
+    return `<div class="history-item${h.id===activeHistoryId?' active':''}" data-id="${h.id}">
+      <div class="hi-title">${esc(h.channel_title)}</div>
+      <div class="hi-meta"><span>${h.timestamp}</span><span class="badge">${h.total} vids${yt}</span></div></div>`;
+  }).join('');
+  $$('.history-item', historyEl).forEach(el => el.addEventListener('click', () => loadHistory(+el.dataset.id)));
+}
+async function loadHistory(id) {
+  setLoading(true); activeHistoryId = id;
+  try {
+    const res = await fetch(`/api/history/${id}`);
+    const data = await res.json();
+    if (data.error) { showError(data.error); return; }
+    currentResult = data; ui.year = 'all'; render(); await refreshHistory();
+  } catch (err) { showError(err.message); } finally { setLoading(false); }
+}
+
+/* ── Pro modal ──────────────────────────────────────────── */
+$('#open-pro').addEventListener('click', () => $('#pro-modal').classList.add('open'));
+$('#pro-modal').addEventListener('click', e => { if (e.target.id === 'pro-modal') e.target.classList.remove('open'); });
+$('#btn-close-pro').addEventListener('click', () => $('#pro-modal').classList.remove('open'));
+$('#btn-upgrade').addEventListener('click', () => { toast('In-app purchase will be enabled via Google Play Billing.'); $('#pro-modal').classList.remove('open'); });
+document.addEventListener('click', e => { if (e.target.id === 'open-pro-2') $('#pro-modal').classList.add('open'); });
+
+/* ── Feedback ───────────────────────────────────────────── */
+$('#foot-year').textContent = new Date().getFullYear();
+$('#open-feedback')?.addEventListener('click', () => $('#feedback-modal').classList.add('open'));
+$('#fb-close')?.addEventListener('click', () => $('#feedback-modal').classList.remove('open'));
+$('#feedback-modal')?.addEventListener('click', e => { if (e.target.id === 'feedback-modal') e.target.classList.remove('open'); });
+$('#feedback-form')?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const type = $('#fb-type').value, email = $('#fb-email').value.trim(), msg = $('#fb-msg').value.trim();
+  if (!msg) return;
+  try {
+    await fetch('/api/feedback', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ type, email, message: msg }),
+    });
+    toast('Thanks! Your feedback was sent.');
+  } catch { toast('Could not send feedback — try again.'); }
+  $('#feedback-modal').classList.remove('open'); $('#fb-msg').value = '';
+});
+
+/* ── UI helpers ─────────────────────────────────────────── */
+function setLoading(on) {
+  searchBtn.disabled = on;
+  if (on) content.innerHTML = `<div class="state"><div class="spinner"></div><p>Analyzing channel… this can take a moment for large channels.</p></div>`;
+}
+function showError(msg) {
+  content.innerHTML = `<div class="state state-error"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>${esc(msg)}</p></div>`;
+}
+let toastTimer;
+function toast(msg) {
+  let el = $('#toast');
+  if (!el) { el = Object.assign(document.createElement('div'), { id: 'toast' });
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;transition:opacity .2s';
+    document.body.appendChild(el); }
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=> el.style.opacity = '0', 2400);
+}
+
+/* ── Formatters ─────────────────────────────────────────── */
+function fmtInt(n) { return Math.round(+n||0).toLocaleString(); }
+function fmtDec(n) { return (+n||0).toLocaleString(undefined,{maximumFractionDigits:1}); }
+function fmtDuration(sec) {
+  sec = Math.round(+sec||0);
+  const h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+  if (h) return `${h}h ${m}m`;
+  if (m) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+function fmtDate(iso) { try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); } catch { return ''; } }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function trunc(s, n) { s = String(s); return s.length > n ? s.slice(0, n-1) + '…' : s; }
+function hexA(hex, a) { const n = parseInt(hex.slice(1),16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; }
+function clamp(s){return s;}
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
   }
 </script>
 </body>

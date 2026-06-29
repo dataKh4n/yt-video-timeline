@@ -1,4 +1,4 @@
-# yt-video-timeline
+# Growline
 
 A Python CLI tool that fetches every video from any YouTube channel and displays them grouped by month and year — as a full list with links or as a clean pivot table.
 
@@ -27,8 +27,8 @@ A Python CLI tool that fetches every video from any YouTube channel and displays
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/dataKh4n/yt-video-timeline.git
-cd yt-video-timeline
+git clone https://github.com/dataKh4n/tubeline.git
+cd tubeline
 
 # 2. Install dependencies
 pip3 install -r requirements.txt
@@ -139,7 +139,7 @@ You won't hit the limit under normal personal use.
 ## Project Structure
 
 ```
-yt-video-timeline/
+tubeline/
 ├── main.py            # CLI entry point (argument parsing)
 ├── youtube_agent.py   # All YouTube API logic
 ├── requirements.txt   # Dependencies

@@ -113,6 +113,93 @@ def fetch_all_videos(youtube, playlist_id: str) -> list[dict]:
     return videos
 
 
+def parse_iso8601_duration(duration: str) -> int:
+    """Convert an ISO 8601 duration (e.g. 'PT1H2M10S') to total seconds."""
+    m = re.fullmatch(
+        r"P(?:(\d+)D)?T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", duration or ""
+    )
+    if not m:
+        return 0
+    days, hours, mins, secs = (int(x) if x else 0 for x in m.groups())
+    return days * 86400 + hours * 3600 + mins * 60 + secs
+
+
+def fetch_video_details(youtube, video_ids: list[str]) -> dict:
+    """
+    Batch-fetch public statistics and duration for the given video IDs.
+    Returns {video_id: {"views", "likes", "comments", "duration_seconds"}}.
+    """
+    details: dict = {}
+    for i in range(0, len(video_ids), 50):
+        batch = video_ids[i : i + 50]
+        resp = (
+            youtube.videos()
+            .list(part="statistics,contentDetails", id=",".join(batch))
+            .execute()
+        )
+        for item in resp.get("items", []):
+            stats = item.get("statistics", {})
+            content = item.get("contentDetails", {})
+            details[item["id"]] = {
+                "views": int(stats.get("viewCount", 0)),
+                "likes": int(stats.get("likeCount", 0)),
+                "comments": int(stats.get("commentCount", 0)),
+                "duration_seconds": parse_iso8601_duration(content.get("duration", "")),
+            }
+    return details
+
+
+def enrich_videos(youtube, videos: list[dict]) -> list[dict]:
+    """Attach views/likes/comments/duration_seconds to each video in place."""
+    details = fetch_video_details(youtube, [v["video_id"] for v in videos])
+    for v in videos:
+        d = details.get(v["video_id"], {})
+        v["views"] = d.get("views", 0)
+        v["likes"] = d.get("likes", 0)
+        v["comments"] = d.get("comments", 0)
+        v["duration_seconds"] = d.get("duration_seconds", 0)
+    return videos
+
+
+def extract_video_id(raw: str) -> str | None:
+    """Pull an 11-char YouTube video ID from a watch/shorts/youtu.be/embed URL or bare ID."""
+    raw = (raw or "").strip()
+    if re.fullmatch(r"[a-zA-Z0-9_-]{11}", raw):
+        return raw
+    m = re.search(r"(?:v=|youtu\.be/|/shorts/|/embed/|/live/)([a-zA-Z0-9_-]{11})", raw)
+    return m.group(1) if m else None
+
+
+def fetch_single_video(youtube, video_id: str) -> dict:
+    """Fetch public snippet + statistics + duration for one video."""
+    resp = (
+        youtube.videos()
+        .list(part="snippet,statistics,contentDetails", id=video_id)
+        .execute()
+    )
+    if not resp.get("items"):
+        raise ValueError(f"Video not found: {video_id}")
+    item = resp["items"][0]
+    sn = item["snippet"]
+    st = item.get("statistics", {})
+    cd = item.get("contentDetails", {})
+    thumbs = sn.get("thumbnails", {})
+    thumb = (thumbs.get("medium") or thumbs.get("high") or thumbs.get("default") or {})
+    return {
+        "video_id": video_id,
+        "title": sn["title"],
+        "channel_title": sn.get("channelTitle", ""),
+        "channel_id": sn.get("channelId", ""),
+        "published_at": sn["publishedAt"],
+        "url": f"https://www.youtube.com/watch?v={video_id}",
+        "thumbnail": thumb.get("url", ""),
+        "views": int(st.get("viewCount", 0)),
+        "likes": int(st.get("likeCount", 0)),
+        "comments": int(st.get("commentCount", 0)),
+        "duration_seconds": parse_iso8601_duration(cd.get("duration", "")),
+    }
+
+
 def group_by_month(videos: list[dict]) -> dict:
     """Return {(year, month): [video, ...]} sorted newest-first."""
     grouped: dict = defaultdict(list)
