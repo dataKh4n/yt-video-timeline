@@ -3,6 +3,9 @@
   "target": {
     "namespace": "android_app",
     "package_name": "com.growlinelabs.getgrowline",
-    "sha256_cert_fingerprints": ["REPLACE_WITH_YOUR_SIGNING_KEY_SHA256_FINGERPRINT"]
+    "sha256_cert_fingerprints": [
+      "26:59:B5:DC:63:F2:67:56:13:54:B7:E2:64:D4:66:1F:DA:25:72:97:7B:60:02:EE:E7:0A:8A:93:DE:A1:50:4C",
+      "E6:C8:21:ED:68:22:21:8C:8A:6F:8F:07:52:30:38:EA:AE:21:E2:2C:98:32:8C:AF:3C:80:09:F3:F1:7B:74:CD"
+    ]
   }
 }]
