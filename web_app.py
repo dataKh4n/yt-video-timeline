@@ -39,6 +39,11 @@ def offline():
     return render_template("offline.html")
 
 
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
 @app.route("/sw.js")
 def service_worker():
     resp = app.send_static_file("sw.js")
